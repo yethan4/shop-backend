@@ -20,9 +20,13 @@ The MVP will include:
 
 ## 4. Technology Stack
 
-- **Backend:** Django (Python)
+- **Backend:** Django (Python), Django REST Framework
+- **Authentication:** JWT (djangorestframework-simplejwt)
 - **Database:** PostgreSQL
 - **Containerization:** Docker
+- **API Documentation:** drf-spectacular (Swagger/OpenAPI)
+- **Image Handling:** Pillow
+- **CORS:** django-cors-headers
 
 ## 5. Database Design
 
@@ -59,4 +63,4 @@ The frontend repository will include its own planning and documentation.
 
 ---
 
-_Last updated: 2025-06-14_
+_Last updated: 2025-06-15_
