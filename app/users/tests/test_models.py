@@ -1,5 +1,8 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+
+from users import models
 
 
 def create_user(
@@ -66,3 +69,44 @@ class CustomUserModelTests(TestCase):
         )
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+
+class AddressModelTests(TestCase):
+    """Test Address Model."""
+
+    def setUp(self):
+        self.user = create_user()
+        self.client.force_login(self.user)
+
+    def test_create_address_successful(self):
+        """Test successful creation of an Address instance."""
+        address = models.Address.objects.create(
+            user=self.user,
+            street="Drzymaly 3",
+            city="Poznan",
+            zip_code="60-613",
+            country="Poland",
+        )
+
+        self.assertEqual(
+            models.Address.objects.filter(user=self.user).count(), 1)
+        self.assertTrue(models.Address.objects.filter(id=address.id).exists())
+        self.assertEqual(address.user, self.user)
+        self.assertEqual(address.street, "Drzymaly 3")
+        self.assertEqual(address.city, "Poznan")
+        self.assertEqual(address.zip_code, "60-613")
+        self.assertEqual(address.country, "Poland")
+
+    def test_address_requires_street(self):
+        """
+        Test that creating an Address without a street raises a ValidationError
+        """
+        address = models.Address(
+            user=self.user,
+            city="Poznan",
+            zip_code="60-613",
+            country="Poland",
+        )
+
+        with self.assertRaises(ValidationError):
+            address.full_clean()
