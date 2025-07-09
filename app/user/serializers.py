@@ -70,3 +70,20 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 "An account with this phone number already exists")
 
         return value
+
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    """Serializer for basic current user data."""
+
+    class Meta:
+        model = get_user_model()
+        fields = ['username', 'email', 'first_name', 'last_name']
+
+
+class CurrentUserDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detail current user data"""
+
+    class Meta:
+        model = get_user_model()
+        fields = ['username', 'email', 'first_name', 'last_name',
+                  'phone_number']

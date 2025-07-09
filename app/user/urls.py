@@ -16,4 +16,8 @@ urlpatterns = [
          name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(),
          name='token_refresh'),
+    path('current/', views.CurrentUserAPIView.as_view(),
+         name='current-user'),
+    path('current/detail/', views.CurrentUserDetailAPIView.as_view(),
+         name='current-user-detail'),
 ]

@@ -12,6 +12,8 @@ from rest_framework import status
 REGISTER_USER_URL = reverse('user:register-user')
 TOKEN_PAIR_URL = reverse('user:token_obtain_pair')
 TOKEN_REFRESH = reverse('user:token_refresh')
+CURRENT_USER_INFO = reverse('user:current-user')
+CURRENT_USER_DETAIL_INFO = reverse('user:current-user-detail')
 
 
 def create_user(**params):
@@ -181,3 +183,43 @@ class PublicUserAPITests(TestCase):
         self.assertNotIn('access', res.data)
         self.assertNotIn('refresh', res.data)
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_retrieve_current_user_data_error(self):
+        """Test that unauthorized user cannot retrieve current user data"""
+
+        res = self.client.get(CURRENT_USER_INFO)
+        res_detail = self.client.get(CURRENT_USER_DETAIL_INFO)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(res_detail.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class PrivateUserAPITests(TestCase):
+    """Test API request that require authentication"""
+
+    def setUp(self):
+        self.user = create_user()
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_current_user_basic_data(self):
+        """Test retrieving basic data of the current authenticated user."""
+        res = self.client.get(CURRENT_USER_INFO, {})
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {
+            'username': self.user.username,
+            'email': self.user.email,
+            'first_name': self.user.first_name,
+            'last_name': self.user.last_name
+        })
+        self.assertNotIn("phone_number", res.data)
+        self.assertNotIn("password", res.data)
+
+    def test_retrieve_current_user_detail_data(self):
+        """Test retrieving detailed data of the current authenticated user."""
+        res = self.client.get(CURRENT_USER_DETAIL_INFO, {})
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['phone_number'], self.user.phone_number)
+        self.assertNotIn("password", res.data)
