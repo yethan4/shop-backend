@@ -10,17 +10,40 @@ from rest_framework import status
 
 
 REGISTER_USER_URL = reverse('user:register-user')
+TOKEN_PAIR_URL = reverse('user:token_obtain_pair')
+TOKEN_REFRESH = reverse('user:token_refresh')
 
 
 def create_user(**params):
     """Create and return a new user"""
-    return get_user_model().objects.create_user(**params)
+    defaults = {
+        'username': 'janek123',
+        'email': 'user@example.com',
+        'first_name': 'Jan',
+        'last_name': 'Kowalski',
+        'phone_number': '123456789',
+        'password': 'Test1234',
+    }
+    defaults.update(params)
+    return get_user_model().objects.create_user(**defaults)
 
 
 class PublicUserAPITests(TestCase):
     """Test the public features of the user API."""
     def setUp(self):
         self.client = APIClient()
+
+    def get_tokens_for_valid_user(self, email, password):
+        """
+        Authenticate the user with given email and password,
+        then return access and refresh tokens from the API.
+        """
+        payload = {
+            'email': email,
+            'password': password
+        }
+        res = self.client.post(TOKEN_PAIR_URL, payload)
+        return res.data
 
     def test_registration_user_success(self):
         """Test registration a user is successful"""
@@ -110,3 +133,51 @@ class PublicUserAPITests(TestCase):
             'password2': 'test1234',
         })
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_token_with_valid_credentials(self):
+        """
+        Test generates access and refresh token for valid credentials
+        """
+        user_details = {
+            'email': 'test@example.com',
+            'password': 'Test1234'
+        }
+        create_user(**user_details)
+
+        payload = {
+            'email': user_details['email'],
+            'password': user_details['password'],
+        }
+        res = self.client.post(TOKEN_PAIR_URL, payload)
+
+        self.assertIn('access', res.data)
+        self.assertIn('refresh', res.data)
+
+    def test_refresh_token(self):
+        """Test refresh tokens"""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'Test1234',
+        }
+
+        create_user(**payload)
+        tokens = self.get_tokens_for_valid_user(**payload)
+
+        res = self.client.post(TOKEN_REFRESH, {'refresh': tokens['refresh']})
+
+        self.assertIn('access', res.data)
+        self.assertNotIn('refresh', res.data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_create_token_with_invalid_credentials(self):
+        """Test returns error if credentials invalid."""
+        payload = {
+            'email': 'y8kjhk788@lkjoiy.com',
+            'password': 'oiaudasod',
+        }
+
+        res = self.client.post(TOKEN_PAIR_URL, payload)
+
+        self.assertNotIn('access', res.data)
+        self.assertNotIn('refresh', res.data)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
