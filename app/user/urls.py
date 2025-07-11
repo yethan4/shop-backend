@@ -20,4 +20,6 @@ urlpatterns = [
          name='current-user'),
     path('current/detail/', views.CurrentUserDetailAPIView.as_view(),
          name='current-user-detail'),
+    path('address/', views.AddressCreateAPIView.as_view(),
+         name='create-address')
 ]

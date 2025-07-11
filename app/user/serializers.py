@@ -8,6 +8,8 @@ from rest_framework.validators import UniqueValidator
 
 import re
 
+from user.models import Address
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for user registration."""
@@ -87,3 +89,12 @@ class CurrentUserDetailSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ['username', 'email', 'first_name', 'last_name',
                   'phone_number']
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    """Serializer for address"""
+
+    class Meta:
+        model = Address
+        fields = ['id', 'street', 'city', 'zip_code', 'country']
+        read_only_fields = ['id']

@@ -8,12 +8,15 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
+from user.models import Address
+
 
 REGISTER_USER_URL = reverse('user:register-user')
 TOKEN_PAIR_URL = reverse('user:token_obtain_pair')
 TOKEN_REFRESH = reverse('user:token_refresh')
 CURRENT_USER_INFO = reverse('user:current-user')
 CURRENT_USER_DETAIL_INFO = reverse('user:current-user-detail')
+CREATE_ADDRESS = reverse('user:create-address')
 
 
 def create_user(**params):
@@ -193,6 +196,18 @@ class PublicUserAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(res_detail.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_create_address_error(self):
+        """Test that unauthorized user cannot create an address"""
+        res = self.client.post(CREATE_ADDRESS, {
+            'street': '123 Main St',
+            'city': 'Warsaw',
+            'zip_code': '00-001',
+            'country': 'Poland'
+        })
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Address.objects.all().count(), 0)
+
 
 class PrivateUserAPITests(TestCase):
     """Test API request that require authentication"""
@@ -223,3 +238,36 @@ class PrivateUserAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data['phone_number'], self.user.phone_number)
         self.assertNotIn("password", res.data)
+
+    def test_create_address(self):
+        """Test create address by current user"""
+
+        res = self.client.post(CREATE_ADDRESS, {
+            'street': '123 Main St',
+            'city': 'Warsaw',
+            'zip_code': '00-001',
+            'country': 'Poland'
+        })
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Address.objects.all().count(), 1)
+
+    def test_create_existing_address(self):
+        """
+        Test that the API prevents duplicate addresses and returns the
+        existing address
+        """
+
+        payload = {
+            'street': '123 Main St',
+            'city': 'Warsaw',
+            'zip_code': '00-001',
+            'country': 'Poland'
+        }
+        Address.objects.create(user=self.user, **payload)
+
+        res = self.client.post(CREATE_ADDRESS, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Address.objects.count(), 1)
+        self.assertEqual(res.data["created"], False)
