@@ -6,14 +6,15 @@
 - [x] Project planning and database design
 
 - [ ] Implement core models
-    - [ ] User model
+    - [x] User & Adress models
     - [ ] Product & Category models
     - [ ] Cart & Order models
     - [ ] Review model
     - [ ] Create and apply initial migrations
 
 - [ ] Develop MVP features
-    - [ ] User registration & authentication
+    - [x] User registration & authentication (JWT)
+    - [x] Address creation API
     - [ ] Product listing API
     - [ ] Cart management
     - [ ] Order placement
@@ -25,4 +26,4 @@
 **Note:** I will try to write tests while building new features, and sometimes use TDD.
 
 ---
-_Last updated: 2025-06-14_
+_Last updated: 2025-07-11_
