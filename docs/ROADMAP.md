@@ -7,7 +7,7 @@
 
 - [ ] Implement core models
     - [x] User & Adress models
-    - [ ] Product & Category models
+    - [x] Product & Category models
     - [ ] Cart & Order models
     - [ ] Review model
     - [ ] Create and apply initial migrations
@@ -15,7 +15,7 @@
 - [ ] Develop MVP features
     - [x] User registration & authentication (JWT)
     - [x] Address creation API
-    - [ ] Product listing API
+    - [x] Product listing API
     - [ ] Cart management
     - [ ] Order placement
     - [ ] Review submission
@@ -26,4 +26,4 @@
 **Note:** I will try to write tests while building new features, and sometimes use TDD.
 
 ---
-_Last updated: 2025-07-11_
+_Last updated: 2025-10-17_
