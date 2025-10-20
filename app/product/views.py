@@ -10,7 +10,19 @@ from .serializers import (
     CategorySerializer,
 )
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
+
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='category',
+            description='Filter products by category id',
+            required=False,
+            type=int
+        )
+    ]
+)
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     """View for listing and retrieving products"""
     queryset = Product.objects.all()
