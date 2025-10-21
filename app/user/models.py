@@ -91,3 +91,7 @@ class Address(models.Model):
 
     def __str__(self):
         return f"{self.city}, {self.street}, {self.zip_code}"
+
+    class Meta:
+        verbose_name = 'address'
+        verbose_name_plural = 'addresses'
