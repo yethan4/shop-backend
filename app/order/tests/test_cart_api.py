@@ -12,11 +12,11 @@ from order.models import Cart, CartItem
 
 
 def get_cart_url():
-    return reverse('order:cart')
+    return reverse('order:cart-list')
 
 
 def get_cart_item_url():
-    return reverse('order:cart-item')
+    return reverse('order:cart-item-list')
 
 
 def cart_item_detail_url(item_id):
@@ -200,8 +200,9 @@ class PrivateCartAPITests(TestCase):
         self.assertEqual(cart.total(), expected)
 
     def test_add_product_to_cart_when_item_exists(self):
-        """When an authenticated user adds a product already in the cart,
-        the item's quantity is increased and its subtotal is updated."""
+        """
+        When an authenticated user adds a product already in the cart, the item's quantity is increased and its subtotal is updated. # noqa: E501
+        """
 
         cart = Cart.objects.create(user=self.user)
         cart_item = CartItem.objects.create(
@@ -272,8 +273,7 @@ class PrivateCartAPITests(TestCase):
 
     def test_update_cartitem_quantity_updates_subtotal_and_cart_total(self):
         """
-        An authenticated user can update a cart item's quantity;
-        the cartitem subtotal and cart total are updated accordingly.
+        An authenticated user can update a cart item's quantity; the cartitem subtotal and cart total are updated accordingly. # noqa: E501
         """
 
         cart = Cart.objects.create(user=self.user)
@@ -320,9 +320,7 @@ class PrivateCartAPITests(TestCase):
 
     def test_remove_cartitem_deletes_item_and_updates_cart(self):
         """
-        An authenticated user can delete a cart item;
-        the item is removed and the cart total is updated;
-        even if it is the last cart item, the cart will remain and be empty.
+        An authenticated user can delete a cart item; the item is removed and the cart total is updated; even if it is the last cart item, the cart will remain and be empty. # noqa: E501
         """
 
         cart = Cart.objects.create(user=self.user)
@@ -347,8 +345,7 @@ class PrivateCartAPITests(TestCase):
 
     def test_setting_cartitem_quantity_to_zero_removes_item_from_cart(self):
         """
-        An authenticated user setting a cart item's quantity to zero
-        removes the item from the cart and updates the cart total.
+        An authenticated user setting a cart item's quantity to zero removes the item from the cart and updates the cart total. # noqa: E501
         """
         cart = Cart.objects.create(user=self.user)
         cart_item = CartItem.objects.create(
@@ -372,7 +369,6 @@ class PrivateCartAPITests(TestCase):
         )
 
         cart.refresh_from_db()
-
         self.assertIn(
             res.status_code,
             (status.HTTP_200_OK, status.HTTP_204_NO_CONTENT)
@@ -388,8 +384,7 @@ class PrivateCartAPITests(TestCase):
         )
 
     def test_cannot_update_another_users_cartitem(self):
-        """An authenticated user cannot update the quantity of a cart item
-        that belongs to another user (should return 403 or 400).
+        """An authenticated user cannot update the quantity of a cart item that belongs to another user (should return 403 or 400). # noqa: E501
         """
 
         other = get_user_model().objects.create_user(
@@ -428,9 +423,7 @@ class PrivateCartAPITests(TestCase):
         )
 
     def test_cannot_delete_another_users_cartitem(self):
-        """An authenticated user cannot delete a cart item
-        that belongs to another user
-        (should return 403 or 400) and the item remains.
+        """An authenticated user cannot delete a cart item that belongs to another user (should return 403 or 400) and the item remains. # noqa: E501
         """
 
         other = get_user_model().objects.create_user(
@@ -480,15 +473,14 @@ class PrivateCartAPITests(TestCase):
 
     def test_delete_cart_clears_items_but_keeps_cart(self):
         """
-        An authenticated user deleting the cart clears all items
-        but keeps the Cart instance.
+        An authenticated user deleting the cart clears all items but keeps the Cart instance. # noqa: E501
         """
 
         cart = Cart.objects.create(user=self.user)
         CartItem.objects.create(cart=cart, product=self.product1, quantity=1)
         CartItem.objects.create(cart=cart, product=self.product2, quantity=2)
 
-        res = self.client.delete(get_cart_url())
+        res = self.client.delete(reverse('order:cart-clear'))
 
         self.assertIn(
             res.status_code,
