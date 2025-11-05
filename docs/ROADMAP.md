@@ -8,7 +8,7 @@
 - [ ] Implement core models
     - [x] User & Adress models
     - [x] Product & Category models
-    - [ ] Cart & Order models
+    - [x] Cart & Order models
     - [ ] Review model
     - [ ] Create and apply initial migrations
 
@@ -16,7 +16,7 @@
     - [x] User registration & authentication (JWT)
     - [x] Address creation API
     - [x] Product listing API
-    - [ ] Cart management
+    - [x] Cart management
     - [ ] Order placement
     - [ ] Review submission
 
