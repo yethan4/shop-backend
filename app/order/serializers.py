@@ -4,7 +4,12 @@ Serializers for the order API View.
 from rest_framework import serializers
 
 from product.models import Product, ProductImage
-from .models import Cart, CartItem
+from .models import (
+    Cart,
+    CartItem,
+    Order,
+    OrderItem
+)
 
 
 class ProductCartSerializer(serializers.ModelSerializer):
@@ -54,6 +59,44 @@ class CartSerializer(serializers.ModelSerializer):
 
     def get_total(self, obj):
         return obj.total()
+
+    def get_total_items(self, obj):
+        return sum(item.quantity for item in obj.items.all())
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all()
+    )
+    product_data = serializers.SerializerMethodField()
+    total_price = serializers.SerializerMethodField()
+    quantity = serializers.IntegerField(min_value=1, default=1)
+
+    class Meta:
+        model = OrderItem
+        fields = [
+            'id', 'order', 'product', 'product_data', 'quantity', 'price'
+        ]
+        read_only_fields = ['id', 'subtotal', 'cart']
+
+    def get_product_data(self, obj):
+        return ProductCartSerializer(obj.product).data
+
+    def get_total_price(self, obj):
+        return obj.total_price()
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    total = serializers.SerializerMethodField()
+    items = OrderItemSerializer(many=True, read_only=True)
+    total_items = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ['id', 'items', 'total', 'total_items']
+
+    def get_total(self, obj):
+        return obj.calculate_total()
 
     def get_total_items(self, obj):
         return sum(item.quantity for item in obj.items.all())

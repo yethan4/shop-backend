@@ -1,11 +1,23 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from django.db import transaction
 
-from .models import Cart, CartItem
-from .serializers import CartSerializer, CartItemSerializer
+from .models import (
+    Cart,
+    CartItem,
+    Order,
+    OrderItem
+)
+from .serializers import (
+    CartSerializer,
+    CartItemSerializer,
+    OrderSerializer,
+    OrderItemSerializer
+)
 
 
 class CartItemViewSet(viewsets.ModelViewSet):
@@ -128,3 +140,87 @@ class CartViewSet(viewsets.ViewSet):
         cart = Cart.objects.get(user=request.user)
         cart.items.all().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class OrderItemViewSet(viewsets.ModelViewSet):
+    pass
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    """ViewSet for creating and listing user orders"""
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only orders belonging to the authenticated user."""
+        return Order.objects.filter(user=self.request.user).order_by('id')
+
+    def get_serializer_class(self):
+        """Return appropriate serializer depending on action."""
+        if self.action == 'retrieve':
+            return OrderItemSerializer
+        return OrderSerializer
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """Create an order from the user's cart."""
+        user = request.user
+        cart_id = request.data.get('cart_id')
+
+        # 1️⃣ Pobierz koszyk
+        if cart_id:
+            try:
+                cart = Cart.objects.get(id=cart_id)
+            except Cart.DoesNotExist:
+                return Response(
+                    {"detail": "Cart not found."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if cart.user != user:
+                return Response(
+                    {"detail": "You cannot place an order for another user's cart."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        else:
+            cart = Cart.objects.filter(user=user).first()
+
+        if not cart or not cart.items.exists():
+            return Response(
+                {"detail": "Cannot place order from an empty cart."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2️⃣ Utwórz zamówienie
+        order = Order.objects.create(user=user, status='pending')
+
+        # 3️⃣ Przenieś CartItems → OrderItems
+        for item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price,
+                total_price=item.subtotal(),
+            )
+
+        # 4️⃣ Oblicz total i zapisz
+        order.calculate_total(save=True)
+
+        # 5️⃣ Wyczyść koszyk
+        cart.items.all().delete()
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Return detail for a single order (only for owner)."""
+        order = get_object_or_404(Order, pk=kwargs["pk"])
+
+        if order.user != request.user:
+            return Response(
+                {"detail": "You do not have permission to access this order."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
